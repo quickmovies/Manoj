@@ -2,52 +2,235 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preparing Link...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Secure Download</title>
     <style>
-        body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center;}
-        .spinner { border: 4px solid #334155; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        #ad-space { margin-top: 30px; width: 300px; height: 250px; background: #1e293b; border: 1px dashed #3b82f6; display: flex; align-items: center; justify-content: center; color: #94a3b8;}
+        /* Apple/iOS Style Resets */
+        :root {
+            --bg-color: #000000;
+            --card-bg: rgba(28, 28, 30, 0.65);
+            --text-primary: #FFFFFF;
+            --text-secondary: #8E8E93;
+            --accent-blue: #0A84FF;
+            --accent-red: #FF453A;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Card */
+        .download-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            margin-top: 40px;
+            box-sizing: border-box;
+        }
+
+        /* Animated Circular Countdown */
+        .progress-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 25px auto;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .progress-ring__circle-bg {
+            fill: transparent;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 6;
+        }
+
+        .progress-ring__circle {
+            fill: transparent;
+            stroke: var(--accent-blue);
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 339.292; /* Circumference */
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .countdown-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            letter-spacing: -0.5px;
+        }
+
+        p.status-desc {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .error-icon {
+            display: none;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px auto;
+            color: var(--accent-red);
+        }
+
+        /* Dummy Article Section */
+        .article-content {
+            max-width: 600px;
+            width: 100%;
+            margin-top: 50px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 16px;
+            padding-bottom: 50px;
+        }
+
+        .article-content h2 {
+            color: var(--text-primary);
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            margin-bottom: 15px;
+        }
+
+        .article-content p {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="spinner" id="loader"></div>
-    <h2 id="msg">Redirecting to target...</h2>
+    <div class="download-card">
+        
+        <div class="progress-container" id="loader-ui">
+            <svg class="progress-ring" viewBox="0 0 120 120">
+                <circle class="progress-ring__circle-bg" cx="60" cy="60" r="54"></circle>
+                <circle class="progress-ring__circle" id="progress-circle" cx="60" cy="60" r="54"></circle>
+            </svg>
+            <div class="countdown-text" id="countdown-number">--</div>
+        </div>
 
-    <div id="ad-space">Your Ads Run Here</div>
+        <svg class="error-icon" id="error-ui" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+
+        <h1 id="status-title">Preparing Secure Link</h1>
+        <p class="status-desc" id="status-desc">Fetching file routing information...</p>
+    </div>
+
+    <div class="article-content">
+        <h2>The Evolution of Digital Cinema</h2>
+        <p>In the modern era of streaming and digital downloads, the way we consume media has fundamentally shifted. Gone are the days of physical media acting as the sole gateway to cinematic experiences. Today, high-definition content is delivered instantly across global networks, allowing viewers to experience 4K and HEVC formats directly on their personal devices.</p>
+        <p>This leap in technology is largely powered by advanced content delivery networks (CDNs) and sophisticated compression algorithms. Codecs like H.265 have revolutionized file sizes, ensuring that cinematic quality is preserved without demanding unmanageable bandwidth from the end user.</p>
+        <p>As we look to the future, the integration of cloud storage and instant-access routing will continue to break down geographical barriers, making global entertainment accessible to anyone with an internet connection.</p>
+    </div>
 
     <script>
-        // Extract the ?mov=ID from the URL
+        const TOTAL_TIME = 15;
+        let timeLeft = TOTAL_TIME;
+        
         const urlParams = new URLSearchParams(window.location.search);
         const movId = urlParams.get('mov');
-        const msg = document.getElementById('msg');
-        const loader = document.getElementById('loader');
+        
+        const circle = document.getElementById('progress-circle');
+        const countdownNumber = document.getElementById('countdown-number');
+        const statusTitle = document.getElementById('status-title');
+        const statusDesc = document.getElementById('status-desc');
+        const loaderUi = document.getElementById('loader-ui');
+        const errorUi = document.getElementById('error-ui');
+
+        // SVG Circle Math
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+
+        function setProgress(percent) {
+            const offset = circumference - (percent / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        function showError(title, desc) {
+            loaderUi.style.display = 'none';
+            errorUi.style.display = 'block';
+            statusTitle.innerText = title;
+            statusTitle.style.color = 'var(--accent-red)';
+            statusDesc.innerText = desc;
+        }
 
         if (movId) {
-            // Append a timestamp to bypass aggressive GitHub caching
+            // Fetch the storage JSON with a cache-busting timestamp
             fetch('storage.json?t=' + new Date().getTime())
                 .then(response => response.json())
                 .then(data => {
                     if (data[movId]) {
-                        // The delay allows your ads to run/view before redirecting
-                        setTimeout(() => {
-                            window.location.href = data[movId];
-                        }, 2000); 
+                        
+                        // Valid Link Found: Start 15s Countdown
+                        statusTitle.innerText = "Connection Secured";
+                        statusDesc.innerText = "Your download will begin automatically.";
+                        
+                        countdownNumber.innerText = timeLeft;
+                        setProgress(100);
+
+                        const timerInterval = setInterval(() => {
+                            timeLeft--;
+                            countdownNumber.innerText = timeLeft;
+                            
+                            // Calculate percentage for the ring
+                            const percent = (timeLeft / TOTAL_TIME) * 100;
+                            setProgress(percent);
+
+                            if (timeLeft <= 0) {
+                                clearInterval(timerInterval);
+                                statusTitle.innerText = "Redirecting...";
+                                statusTitle.style.color = "var(--accent-blue)";
+                                statusDesc.innerText = "If nothing happens, check your browser permissions.";
+                                window.location.href = data[movId];
+                            }
+                        }, 1000);
+
                     } else {
-                        loader.style.display = 'none';
-                        msg.innerText = 'Link expired or not found in database.';
-                        msg.style.color = '#ef4444';
+                        showError("Link Expired", "The file you are looking for has been removed or the ID is invalid.");
                     }
                 })
                 .catch(() => {
-                    loader.style.display = 'none';
-                    msg.innerText = 'Database error. Please try again.';
+                    showError("Database Error", "Failed to connect to the routing server. Please refresh the page.");
                 });
         } else {
-            loader.style.display = 'none';
-            msg.innerText = 'Invalid Link ID.';
+            showError("Invalid Request", "No target identifier was provided in the URL.");
         }
     </script>
 </body>
