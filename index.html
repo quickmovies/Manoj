@@ -158,8 +158,31 @@
         <p>This leap in technology is largely powered by advanced content delivery networks (CDNs) and sophisticated compression algorithms. Codecs like H.265 have revolutionized file sizes, ensuring that cinematic quality is preserved without demanding unmanageable bandwidth from the end user.</p>
         <p>As we look to the future, the integration of cloud storage and instant-access routing will continue to break down geographical barriers, making global entertainment accessible to anyone with an internet connection.</p>
     </div>
+<script>
+/* FORCE FRESH PAGE EVERY TIME */
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(reg => reg.unregister());
+    });
+}
 
-    <script>
+window.addEventListener("pageshow", function (event) {
+    if (event.persisted) {
+        location.reload(true);
+    }
+});
+
+history.scrollRestoration = "manual";
+
+/* CLEAR OLD CACHE + ALWAYS LOAD NEW FILES */
+(async () => {
+    if ("caches" in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map(name => caches.delete(name)));
+    }
+})();
+
+/* MAIN SCRIPT */
 const TOTAL_TIME = 15;
 let timeLeft = TOTAL_TIME;
 
@@ -174,7 +197,6 @@ const loaderUi = document.getElementById('loader-ui');
 const errorUi = document.getElementById('error-ui');
 const downloadCard = document.querySelector('.download-card');
 
-// SVG Circle Math
 const radius = circle.r.baseVal.value;
 const circumference = radius * 2 * Math.PI;
 circle.style.strokeDasharray = `${circumference} ${circumference}`;
@@ -196,45 +218,54 @@ if (movId) {
 
     downloadCard.style.display = 'block';
 
-    fetch('storage.json?t=' + new Date().getTime())
-        .then(response => response.json())
-        .then(data => {
-            if (data[movId]) {
+    fetch('storage.json?v=' + Date.now(), {
+        cache: "no-store",
+        headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
 
-                statusTitle.innerText = "Connection Secured";
-                statusDesc.innerText = "Your download will begin automatically.";
+        if (data[movId]) {
 
+            statusTitle.innerText = "Connection Secured";
+            statusDesc.innerText = "Your download will begin automatically.";
+
+            countdownNumber.innerText = timeLeft;
+            setProgress(100);
+
+            const timerInterval = setInterval(() => {
+                timeLeft--;
                 countdownNumber.innerText = timeLeft;
-                setProgress(100);
 
-                const timerInterval = setInterval(() => {
-                    timeLeft--;
-                    countdownNumber.innerText = timeLeft;
+                const percent = (timeLeft / TOTAL_TIME) * 100;
+                setProgress(percent);
 
-                    const percent = (timeLeft / TOTAL_TIME) * 100;
-                    setProgress(percent);
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
 
-                    if (timeLeft <= 0) {
-                        clearInterval(timerInterval);
-                        statusTitle.innerText = "Redirecting...";
-                        statusTitle.style.color = "var(--accent-blue)";
-                        statusDesc.innerText = "If nothing happens, check your browser permissions.";
-                        window.location.href = data[movId];
-                    }
-                }, 1000);
+                    statusTitle.innerText = "Redirecting...";
+                    statusTitle.style.color = "var(--accent-blue)";
+                    statusDesc.innerText = "Opening fresh link...";
 
-            } else {
-                showError("Link Expired", "The file you are looking for has been removed or the ID is invalid.");
-            }
-        })
-        .catch(() => {
-            showError("Database Error", "Failed to connect to the routing server. Please refresh the page.");
-        });
+                    window.location.replace(data[movId] + "?t=" + Date.now());
+                }
+            }, 1000);
+
+        } else {
+            showError("Link Expired", "The file you are looking for has been removed or invalid.");
+        }
+
+    })
+    .catch(() => {
+        showError("Database Error", "Failed to connect server.");
+    });
 
 } else {
-
     downloadCard.style.display = 'none';
-
 }
 </script>
 </body>
