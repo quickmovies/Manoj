@@ -160,78 +160,82 @@
     </div>
 
     <script>
-        const TOTAL_TIME = 15;
-        let timeLeft = TOTAL_TIME;
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const movId = urlParams.get('mov');
-        
-        const circle = document.getElementById('progress-circle');
-        const countdownNumber = document.getElementById('countdown-number');
-        const statusTitle = document.getElementById('status-title');
-        const statusDesc = document.getElementById('status-desc');
-        const loaderUi = document.getElementById('loader-ui');
-        const errorUi = document.getElementById('error-ui');
+const TOTAL_TIME = 15;
+let timeLeft = TOTAL_TIME;
 
-        // SVG Circle Math
-        const radius = circle.r.baseVal.value;
-        const circumference = radius * 2 * Math.PI;
-        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+const urlParams = new URLSearchParams(window.location.search);
+const movId = urlParams.get('mov');
 
-        function setProgress(percent) {
-            const offset = circumference - (percent / 100) * circumference;
-            circle.style.strokeDashoffset = offset;
-        }
+const circle = document.getElementById('progress-circle');
+const countdownNumber = document.getElementById('countdown-number');
+const statusTitle = document.getElementById('status-title');
+const statusDesc = document.getElementById('status-desc');
+const loaderUi = document.getElementById('loader-ui');
+const errorUi = document.getElementById('error-ui');
+const downloadCard = document.querySelector('.download-card');
 
-        function showError(title, desc) {
-            loaderUi.style.display = 'none';
-            errorUi.style.display = 'block';
-            statusTitle.innerText = title;
-            statusTitle.style.color = 'var(--accent-red)';
-            statusDesc.innerText = desc;
-        }
+// SVG Circle Math
+const radius = circle.r.baseVal.value;
+const circumference = radius * 2 * Math.PI;
+circle.style.strokeDasharray = `${circumference} ${circumference}`;
 
-        if (movId) {
-            // Fetch the storage JSON with a cache-busting timestamp
-            fetch('storage.json?t=' + new Date().getTime())
-                .then(response => response.json())
-                .then(data => {
-                    if (data[movId]) {
-                        
-                        // Valid Link Found: Start 15s Countdown
-                        statusTitle.innerText = "Connection Secured";
-                        statusDesc.innerText = "Your download will begin automatically.";
-                        
-                        countdownNumber.innerText = timeLeft;
-                        setProgress(100);
+function setProgress(percent) {
+    const offset = circumference - (percent / 100) * circumference;
+    circle.style.strokeDashoffset = offset;
+}
 
-                        const timerInterval = setInterval(() => {
-                            timeLeft--;
-                            countdownNumber.innerText = timeLeft;
-                            
-                            // Calculate percentage for the ring
-                            const percent = (timeLeft / TOTAL_TIME) * 100;
-                            setProgress(percent);
+function showError(title, desc) {
+    loaderUi.style.display = 'none';
+    errorUi.style.display = 'block';
+    statusTitle.innerText = title;
+    statusTitle.style.color = 'var(--accent-red)';
+    statusDesc.innerText = desc;
+}
 
-                            if (timeLeft <= 0) {
-                                clearInterval(timerInterval);
-                                statusTitle.innerText = "Redirecting...";
-                                statusTitle.style.color = "var(--accent-blue)";
-                                statusDesc.innerText = "If nothing happens, check your browser permissions.";
-                                window.location.href = data[movId];
-                            }
-                        }, 1000);
+if (movId) {
 
-                    } else {
-                        showError("Link Expired", "The file you are looking for has been removed or the ID is invalid.");
+    downloadCard.style.display = 'block';
+
+    fetch('storage.json?t=' + new Date().getTime())
+        .then(response => response.json())
+        .then(data => {
+            if (data[movId]) {
+
+                statusTitle.innerText = "Connection Secured";
+                statusDesc.innerText = "Your download will begin automatically.";
+
+                countdownNumber.innerText = timeLeft;
+                setProgress(100);
+
+                const timerInterval = setInterval(() => {
+                    timeLeft--;
+                    countdownNumber.innerText = timeLeft;
+
+                    const percent = (timeLeft / TOTAL_TIME) * 100;
+                    setProgress(percent);
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        statusTitle.innerText = "Redirecting...";
+                        statusTitle.style.color = "var(--accent-blue)";
+                        statusDesc.innerText = "If nothing happens, check your browser permissions.";
+                        window.location.href = data[movId];
                     }
-                })
-                .catch(() => {
-                    showError("Database Error", "Failed to connect to the routing server. Please refresh the page.");
-                });
-        } else {
-            showError("Invalid Request", "No target identifier was provided in the URL.");
-        }
-    </script>
+                }, 1000);
+
+            } else {
+                showError("Link Expired", "The file you are looking for has been removed or the ID is invalid.");
+            }
+        })
+        .catch(() => {
+            showError("Database Error", "Failed to connect to the routing server. Please refresh the page.");
+        });
+
+} else {
+
+    downloadCard.style.display = 'none';
+
+}
+</script>
 </body>
 </html>
