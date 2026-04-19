@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preparing Link...</title>
+    <style>
+        body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center;}
+        .spinner { border: 4px solid #334155; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        #ad-space { margin-top: 30px; width: 300px; height: 250px; background: #1e293b; border: 1px dashed #3b82f6; display: flex; align-items: center; justify-content: center; color: #94a3b8;}
+    </style>
+</head>
+<body>
+
+    <div class="spinner" id="loader"></div>
+    <h2 id="msg">Redirecting to target...</h2>
+
+    <div id="ad-space">Your Ads Run Here</div>
+
+    <script>
+        // Extract the ?mov=ID from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const movId = urlParams.get('mov');
+        const msg = document.getElementById('msg');
+        const loader = document.getElementById('loader');
+
+        if (movId) {
+            // Append a timestamp to bypass aggressive GitHub caching
+            fetch('storage.json?t=' + new Date().getTime())
+                .then(response => response.json())
+                .then(data => {
+                    if (data[movId]) {
+                        // The delay allows your ads to run/view before redirecting
+                        setTimeout(() => {
+                            window.location.href = data[movId];
+                        }, 2000); 
+                    } else {
+                        loader.style.display = 'none';
+                        msg.innerText = 'Link expired or not found in database.';
+                        msg.style.color = '#ef4444';
+                    }
+                })
+                .catch(() => {
+                    loader.style.display = 'none';
+                    msg.innerText = 'Database error. Please try again.';
+                });
+        } else {
+            loader.style.display = 'none';
+            msg.innerText = 'Invalid Link ID.';
+        }
+    </script>
+</body>
+</html>
